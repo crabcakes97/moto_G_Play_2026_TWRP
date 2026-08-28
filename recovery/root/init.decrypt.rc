@@ -1,13 +1,12 @@
 on init
      export LD_LIBRARY_PATH /system/lib64:/vendor/lib64:/vendor/lib64/hw:/system/lib64/hw
-     setprop crypto.ready 1
+     #create mountpoint for /mnt/vendor/persist partition
+     mkdir /mnt/vendor/persist 0771 system system
 
 on fs
     install_keyring
 
 on early-fs
-    start vold
-    
     service mtk.plpath.utils.link /vendor/bin/mtk_plpath_utils
     class main
     user root
@@ -18,76 +17,65 @@ on early-fs
 
 service vendor.gatekeeper-1-0 /vendor/bin/hw/android.hardware.gatekeeper@1.0-service
     interface android.hardware.gatekeeper@1.0::IGatekeeper default
-    class hal
     user root
     group root
     disabled
     seclabel u:r:recovery:s0
 
-service vendor.keymaster-4-1-trustonic /vendor/bin/hw/android.hardware.keymaster@4.1-service.trustonic
+service vendor.keymint-trustonic /vendor/bin/hw/android.hardware.security.keymint@2.0-service.trustonic
+    class early_hal
     user root
-    group root drmrpc
+    group root
     disabled
-    oneshot
     seclabel u:r:recovery:s0
-    
-service keymaster_attestation-1-1 /vendor/bin/hw/vendor.mediatek.hardware.keymaster_attestation@1.1-service
+    setenv LD_LIBRARY_PATH /vendor/lib64:/vendor/lib64/hw:/system/lib64:/apex/com.android.vndk.v33/lib64
+
+
+service prepdecrypt /system/bin/prepdecrypt.sh
     user root
     group root
     disabled
     oneshot
     seclabel u:r:recovery:s0
+
+on property:ro.crypto.state=encrypted
+    start prepdecrypt
 
 on property:crypto.ready=1
     start mobicore
-    start keymaster_attestation-1-1
+    start vendor.keymint-trustonic
     start vendor.gatekeeper-1-0
-    start vendor.keymaster-4-1-trustonic
-
-on property:hwservicemanager.ready=true
-    start mobicore
-    start keymaster_attestation-1-1
-    start vendor.gatekeeper-1-0
-    start vendor.keymaster-4-1-trustonic
 
 on property:ro.crypto.state=unsupported
     stop mobicore
-    stop keymaster_attestation-1-1
     stop vendor.gatekeeper-1-0
-    stop vendor.keymaster-4-1-trustonic
+    stop vendor.keymint-trustonic
 
 on property:ro.crypto.state=unencrypted
     stop mobicore
-    stop keymaster_attestation-1-1
     stop vendor.gatekeeper-1-0
-    stop vendor.keymaster-4-1-trustonic
+    stop vendor.keymint-trustonic
 
 on property:twrp.decrypt.done=true
     stop mobicore
-    stop keymaster_attestation-1-1
+    stop vendor.keymint-trustonic
     stop vendor.gatekeeper-1-0
-    stop vendor.keymaster-4-1-trustonic
 
 on property:crypto.ready=0
     stop mobicore
-    stop keymaster_attestation-1-1
     stop vendor.gatekeeper-1-0
-    stop vendor.keymaster-4-1-trustonic
+    stop vendor.keymint-trustonic
 
 on boot
     start health-hal-2-1
-    setprop sys.usb.config mtp,adb
-    setprop sys.usb.state mtp,adb
-    setprop persist.sys.usb.config mtp,adb 
-
-    on boot
- #Added Manual For Trustonic
+    #Added Manual For Trustonic
     mkdir /mnt/vendor/persist
+    mkdir /data/vendor/mcRegistry 0775 system system
     mount ext4 /dev/block/by-name/persist /mnt/vendor/persist rw
+    mkdir /mnt/vendor/tzapp
+    mount ext4 /dev/block/by-name/tzapp /mnt/vendor/tzapp rw
+    mount ext4 /dev/block/by-name/tzapp_a /mnt/vendor/tzapp rw
 
-on init
-    #create mountpoint for /mnt/vendor/persist partition
-    mkdir /mnt/vendor/persist 0771 system system
 
 on post-fs
     chown system system /mnt/vendor/persist
@@ -96,6 +84,8 @@ on post-fs
     # We restorecon /mnt/vendor/persist to set SEPolicy label.
     restorecon /mnt/vendor/persist
 
+    mkdir /mnt/vendor/tzapp 0770 system system
+ 
     # Create mcRegistry to store failure record
     mkdir /mnt/vendor/persist/mcRegistry 0771 system system
 
@@ -116,14 +106,11 @@ on property:ro.crypto.type=file && property:ro.crypto.state=encrypted
     mkdir /data/vendor/mcRegistry 0775 system system
     write /proc/bootprof "MOBICORE: create /data/vendor/mcRegistry -- (FBE encrypted)"
 
-# Normal mode, FDE
-on property:vold.decrypt=trigger_restart_framework
-    write /proc/bootprof "MOBICORE: create /data/vendor/mcRegistry ++ (FDE encrypted)"
-    mkdir /data/vendor/mcRegistry 0775 system system
-    write /proc/bootprof "MOBICORE: create /data/vendor/mcRegistry -- (FDE encrypted)"
 
 # Start Daemon (Registry directories should already be present)
-service mobicore /vendor/bin/mcDriverDaemon --sfs-reformat --P1 /mnt/vendor/persist/mcRegistry \
+service mobicore /vendor/bin/mcDriverDaemon \
+    --P0 /data/vendor/mcRegistry/TbStorage \
+    --P1 /mnt/vendor/persist/mcRegistry \
 	-r /vendor/app/mcRegistry/06090000000000000000000000000000.drbin \
 	-r /vendor/app/mcRegistry/020f0000000000000000000000000000.drbin \
 	-r /vendor/app/mcRegistry/05120000000000000000000000000000.drbin \
@@ -142,6 +129,7 @@ service mobicore /vendor/bin/mcDriverDaemon --sfs-reformat --P1 /mnt/vendor/pers
 	-r /vendor/app/mcRegistry/036c0000000000000000000000000000.drbin \
 	-r /vendor/app/mcRegistry/037c0000000000000000000000000000.drbin \
 	-r /vendor/app/mcRegistry/40188311faf343488db888ad39496f9a.drbin \
+	-r /vendor/app/mcRegistry/070c0000000000000000000000000000.drbin \
 	-r /vendor/app/mcRegistry/090b0000000000000000000000000000.drbin \
 	-r /vendor/app/mcRegistry/0f5eed3c3b5a47afacca69a84bf0efad.drbin \
 	-r /vendor/app/mcRegistry/07060000000000000000000000007169.drbin \
@@ -151,7 +139,9 @@ service mobicore /vendor/bin/mcDriverDaemon --sfs-reformat --P1 /mnt/vendor/pers
 	-r /vendor/app/mcRegistry/07407000000000000000000000000000.drbin \
 	-r /vendor/app/mcRegistry/9073f03a9618383bb1856eb3f990babd.drbin \
 	-r /vendor/app/mcRegistry/6b3f5fa0f8cf55a7be2582587d62d63a.drbin \
-	-r /vendor/app/mcRegistry/5020170115e016302017012521300000.drbin
+	-r /vendor/app/mcRegistry/5020170115e016302017012521300000.drbin \
+	-r /vendor/app/mcRegistry/04020000000000000000000000000000.drbin \
+	-r /vendor/app/mcRegistry/03030000000000000000000000000000.drbin
     user root
     group root
     disabled
@@ -179,4 +169,6 @@ service mobicore /vendor/bin/mcDriverDaemon --sfs-reformat --P1 /mnt/vendor/pers
 # 06090000000000000000000000000000.drbin : drm keyinstall
 # 9073f03a9618383bb1856eb3f990babd.drbin : m4u
 # 6b3f5fa0f8cf55a7be2582587d62d63a.drbin : hdcp
+# 04020000000000000000000000000000.drbin : fpc_dr payment lib
+# 03030000000000000000000000000000.drbin : anc_dr
 

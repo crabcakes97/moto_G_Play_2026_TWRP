@@ -15,9 +15,9 @@
 #
 
 PRODUCT_MAKEFILES += \
-    $(LOCAL_DIR)/pb_penangf.mk \
-    $(LOCAL_DIR)/twrp_penangf.mk
+    $(LOCAL_DIR)/pb_kansas.mk \
+    $(LOCAL_DIR)/twrp_kansas.mk
     
 COMMON_LUNCH_CHOICES += \
-     pb_penangf-eng \
-     twrp_penangf-eng
+     pb_kansas-eng \
+     twrp_kansas-eng

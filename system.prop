@@ -10,5 +10,3 @@ ro.vendor.mtk_trustonic_tee_support=1
 ro.hardware.kmsetkey=trustonic
 ro.hardware.gatekeeper=trustonic
 
-# Keymaster
-keymaster_ver=4.1

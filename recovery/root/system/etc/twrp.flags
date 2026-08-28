@@ -1,31 +1,48 @@
 # mount point       fstype    device                                                                flags
 
-# Super Partitions
-/system_a           ext4       /dev/block/mapper/system_a                                 flags=backup=1;flashimg=1;slotselect;display="System Image A"
-/vendor_a           ext4       /dev/block/mapper/vendor_a                                 flags=backup=1;flashimg=1;slotselect;display="Vendor Image A"
-/product_a          ext4       /dev/block/mapper/product_a                                flags=backup=1;flashimg=1;slotselect;display="Product Image A"
-/system_ext_a       ext4       /dev/block/mapper/system_ext_a                             flags=backup=1;flashimg=1;slotselect;display="System_EXT Image A"
+# DYNAMIC
+/system              ext4  /dev/block/mapper/system       flags=display=system;slotselect;backup=1;wipeingui
+/system_image        emmc  /dev/block/mapper/system       flags=display=system_image;slotselect;backup=1;flashimg=1
+
+/system_ext          ext4  /dev/block/mapper/system_ext   flags=display=system_ext;slotselect;backup=1;wipeingui
+/system_ext_image    emmc  /dev/block/mapper/system_ext   flags=display=system_ext_image;slotselect;backup=1;flashimg=1
+
+/vendor              ext4  /dev/block/mapper/vendor       flags=display=vendor;slotselect;backup=1;wipeingui
+/vendor_image        emmc  /dev/block/mapper/vendor       flags=display=vendor_image;slotselect;backup=1;flashimg=1
+
+/product             ext4  /dev/block/mapper/product      flags=display=product;slotselect;backup=1;wipeingui
+/product_image       emmc  /dev/block/mapper/product      flags=display=product_image;slotselect;backup=1;flashimg=1
+
+/vendor_dlkm         ext4  /dev/block/mapper/vendor_dlkm  flags=display=vendor_dlkm;slotselect;backup=1;wipeingui
+/vendor_dlkm_image   emmc  /dev/block/mapper/vendor_dlkm  flags=display=vendor_dlkm_image;slotselect;backup=1;flashimg=1
+
+/system_dlkm         ext4  /dev/block/mapper/system_dlkm  flags=display=system_dlkm;slotselect;backup=1;wipeingui
+/system_dlkm_image   emmc  /dev/block/mapper/system_dlkm  flags=display=system_dlkm_image;slotselect;backup=1;flashimg=1
 
 # Boot
 /boot               emmc      /dev/block/by-name/boot                                     flags=display="Boot";flashimg=1;backup=1;slotselect
+/init_boot          emmc      /dev/block/by-name/init_boot                                flags=display="Init Boot";flashimg=1;backup=1;slotselect
 /vendor_boot        emmc      /dev/block/by-name/vendor_boot                              flags=display="Vendor Boot";flashimg=1;backup=1;slotselect
 /vbmeta             emmc      /dev/block/by-name/vbmeta                                   flags=slotselect;display="VBMeta";flashimg=1;backup=1;slotselect
 
 ## Sensitive data (IMEI, MAC, ...)
-/protect_f          ext4      /dev/block/by-name/protect1                                 flags=display="Protect_f";backup=1;slotselect
-/protect_s          ext4      /dev/block/by-name/protect2                                 flags=display="Protect_s";backup=1;slotselect
-/nvram              emmc      /dev/block/by-name/nvram                                    flags=display="Nvram";backup=1;slotselect
-/nvdata             ext4      /dev/block/by-name/nvdata                                   flags=display="Nvdata";backup=1;slotselect
+/persist            emmc      /dev/block/by-name/persist                                  flags=display="Persist";backup=1;
+/protect_f          ext4      /dev/block/by-name/protect1                                 flags=display="Protect_f";backup=1
+/protect_s          ext4      /dev/block/by-name/protect2                                 flags=display="Protect_s";backup=1
+/nvram              emmc      /dev/block/by-name/nvram                                    flags=display="Nvram";backup=1
+/nvdata             ext4      /dev/block/by-name/nvdata                                   flags=display="Nvdata";backup=1
+/nvcfg              ext4      /dev/block/by-name/nvcfg                                    flags=display="Nvcfg";backup=1
+/cid                emmc      /dev/block/by-name/cid                                      flags=display="cid";backup=1
 
 ## Firmware
-/dtbo               emmc      /dev/block/by-name/dtbo	                                    flags=display="Dtbo";backup=1;flashimg=1;slotselect
-/logo	              emmc      /dev/block/by-name/logo	                                    flags=display="Logo";backup=1;flashimg=1;slotselect
+/dtbo               emmc      /dev/block/by-name/dtbo	                                  flags=display="Dtbo";backup=1;flashimg=1;slotselect
+/logo	            emmc      /dev/block/by-name/logo	                                  flags=display="Logo";backup=1;flashimg=1;slotselect
 /expdb              emmc      /dev/block/by-name/expdb
-#/seccfg            emmc      /dev/block/by-name/seccfg
+/seccfg             emmc      /dev/block/by-name/seccfg                                    flags=display="seccfg";backup=1
 /tee                emmc      /dev/block/by-name/tee                                      flags=slotselect;
 /spmfw              emmc      /dev/block/by-name/spmfw                                    flags=slotselect;
 /otp                emmc      /dev/block/by-name/otp
 
 ## Removable storage
-/external_sd        vfat      /dev/block/mmcblk1p1                 /dev/block/mmcblk1     flags=display="MicroSD";storage;wipeingui;removable
-/usbstorage         vfat      /dev/block/sda1                      /dev/block/sda         flags=fsflags=utf8;display="USB Storage";storage;wipeingui;removable
+/external_sd        vfat      /dev/block/mmcblk0p1                 /dev/block/mmcblk0     flags=display="MicroSD";storage;wipeingui;removable
+/usbstorage         vfat      /dev/block/sdd1                      /dev/block/sdd         flags=fsflags=utf8;display="USB Storage";storage;wipeingui;removable

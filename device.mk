@@ -14,10 +14,14 @@
 # limitations under the License.
 #
 
-LOCAL_PATH := device/motorola/penangf
+LOCAL_PATH := device/motorola/kansas
+
+# Soong namespaces
+PRODUCT_SOONG_NAMESPACES += $(DEVICE_PATH)
 
 # Dynamic Partitions
 PRODUCT_USE_DYNAMIC_PARTITIONS := true
+PRODUCT_BUILD_SUPER_PARTITION := false
 
 # Virtual A/B
 ENABLE_VIRTUAL_AB := true
@@ -59,8 +63,15 @@ PRODUCT_PACKAGES += \
     android.hardware.health@2.1-impl \
     android.hardware.health@2.1-service
 
+# Security
+PRODUCT_PACKAGES += \
+    android.hardware.security.keymint \
+    android.hardware.security.secureclock \
+    android.hardware.security.sharedsecret
+
 # Keystore2
 PRODUCT_PACKAGES += \
+    keystore2 \
     android.system.keystore2
 
 # Update Engine
@@ -68,4 +79,8 @@ PRODUCT_PACKAGES += \
     update_engine \
     update_engine_sideload \
     update_verifier
+
+
+
+
 
