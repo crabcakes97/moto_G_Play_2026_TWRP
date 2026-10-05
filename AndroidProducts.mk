@@ -7,6 +7,6 @@ COMMON_LUNCH_CHOICES := \
     twrp_kansas-user \
     twrp_kansas-userdebug \
     twrp_kansas-eng \
-    omni_kandas-user \
+    omni_kansas-user \
     omni_kansas-userdebug \
     omni_kansas-eng
