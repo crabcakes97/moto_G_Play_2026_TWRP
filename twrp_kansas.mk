@@ -24,12 +24,12 @@ $(call inherit-product-if-exists, $(DEVICE_PATH)/fox_$(PRODUCT_RELEASE_NAME).mk)
 # Inherit some common twrp stuff.
 $(call inherit-product, vendor/twrp/config/common.mk)
 
-# Inherit from penangf device
-$(call inherit-product, device/motorola/penangf/device.mk)
+# Inherit from penangf device edited to Kansas 
+$(call inherit-product, device/motorola/kansas/device.mk)
 
-PRODUCT_DEVICE := penangf
-PRODUCT_NAME := twrp_penangf
+PRODUCT_DEVICE := kansas
+PRODUCT_NAME := twrp_kansas
 PRODUCT_BRAND := motorola
-PRODUCT_MODEL := penangf
+PRODUCT_MODEL := Moto G 2025
 PRODUCT_MANUFACTURER := motorola
 
