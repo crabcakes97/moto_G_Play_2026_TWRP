@@ -1,30 +1,17 @@
 #
 # Copyright (C) 2025 The TWRP Open Source Project
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Licensed under the Apache License, Version 2.0
 #
 
 # Inherit from those products. Most specific first.
 $(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
 
-# Inherit any OrangeFox-specific settings
-$(call inherit-product-if-exists, $(DEVICE_PATH)/fox_$(PRODUCT_RELEASE_NAME).mk)
-
-# Inherit some common twrp stuff.
+# Inherit common TWRP configuration.
 $(call inherit-product, vendor/twrp/config/common.mk)
 
-# Inherit from penangf device edited to Kansas 
+# Inherit from Kansas device tree.
 $(call inherit-product, device/motorola/kansas/device.mk)
 
 PRODUCT_DEVICE := kansas
@@ -32,4 +19,3 @@ PRODUCT_NAME := twrp_kansas
 PRODUCT_BRAND := motorola
 PRODUCT_MODEL := Moto G 2025
 PRODUCT_MANUFACTURER := motorola
-
