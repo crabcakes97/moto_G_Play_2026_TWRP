@@ -1,0 +1,126 @@
+name: Build TWRP - kansas
+
+on:
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: "Build variant (user/userdebug/eng)"
+        required: true
+        default: "eng"
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 360
+
+    steps:
+      - name: Free up disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /opt/hostedtoolcache/CodeQL || true
+          sudo docker image prune --all --force || true
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            bc bison build-essential ccache curl flex \
+            g++-multilib gcc-multilib git git-lfs gnupg gperf \
+            imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev \
+            liblz4-tool libncurses5 libncurses5-dev libsdl1.2-dev \
+            libssl-dev libxml2 libxml2-utils lzop pngcrush rsync \
+            schedtool squashfs-tools xsltproc zip zlib1g-dev \
+            python3 python-is-python3 openjdk-8-jdk
+
+      - name: Set up git identity
+        run: |
+          git config --global user.name "crabcakes97"
+          git config --global user.email "eddiebob146@gmail.com"
+          git config --global color.ui false
+
+      - name: Install repo tool
+        run: |
+          mkdir -p "$HOME/bin"
+          curl -s https://storage.googleapis.com/git-repo-downloads/repo \
+            -o "$HOME/bin/repo"
+          chmod a+x "$HOME/bin/repo"
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+
+      - name: Sync TWRP 12.1 source
+        run: |
+          mkdir -p twrp
+          cd twrp
+          repo init --depth=1 \
+            -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git \
+            -b twrp-12.1
+          repo sync -c -j"$(nproc)" \
+            --force-sync \
+            --no-clone-bundle \
+            --no-tags
+
+      - name: Checkout Kansas device tree
+        uses: actions/checkout@v4
+        with:
+          path: twrp/device/motorola/kansas
+
+      - name: Verify Kansas device tree
+        working-directory: twrp
+        run: |
+          echo "=== Kansas device tree ==="
+          find device/motorola/kansas -maxdepth 2 -type f | sort
+          echo
+          echo "=== Prebuilt files ==="
+          ls -lah device/motorola/kansas/prebuilt/ || true
+          echo
+          echo "=== Product files ==="
+          ls -lah device/motorola/kansas/*product*.mk \
+            device/motorola/kansas/AndroidProducts.mk \
+            2>/dev/null || true
+
+      - name: Build TWRP vendor_boot
+        working-directory: twrp
+        run: |
+          set -e
+          source build/envsetup.sh
+          export ALLOW_MISSING_DEPENDENCIES=true
+
+          lunch twrp_kansas-${{ github.event.inputs.variant }}
+
+          echo "=== Build configuration ==="
+          get_build_var TARGET_NO_RECOVERY || true
+          get_build_var BOARD_USES_VENDOR_BOOTIMAGE || true
+          get_build_var BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT || true
+          get_build_var TARGET_PREBUILT_KERNEL || true
+          get_build_var TARGET_PREBUILT_DTB || true
+
+          echo "=== Building vendor_boot.img ==="
+          mka vendorbootimage -j"$(nproc)"
+
+      - name: Locate output image
+        working-directory: twrp
+        run: |
+          set -e
+          OUT_DIR="out/target/product/kansas"
+          echo "OUT_DIR=$OUT_DIR" >> "$GITHUB_ENV"
+
+          echo "=== Output directory ==="
+          ls -lah "$OUT_DIR"
+
+          echo "=== Recovery images ==="
+          find "$OUT_DIR" -maxdepth 1 -type f \
+            \( -name "vendor_boot.img" \
+               -o -name "recovery.img" \
+               -o -name "boot.img" \
+               -o -name "dtbo.img" \) \
+            -exec ls -lh {} \;
+
+          test -f "$OUT_DIR/vendor_boot.img"
+
+      - name: Upload vendor_boot image
+        uses: actions/upload-artifact@v4
+        with:
+          name: twrp-kansas-vendor_boot-${{ github.run_number }}
+          path: twrp/out/target/product/kansas/vendor_boot.img
+          if-no-files-found: error
+          retention-days: 14
+          
