@@ -11,6 +11,7 @@ on early-init
     insmod /vendor/lib/modules/mtk_irtx_pwm.ko
     insmod /vendor/lib/modules/flashlights-ocp81375.ko
     insmod /vendor/lib/modules/nova_0flash_mmi_v3.ko
+    insmod /vendor/lib/modules/omnivision_tcm_0flash_mmi.ko
 
 on post-fs 
     start boot-hal-1-2
